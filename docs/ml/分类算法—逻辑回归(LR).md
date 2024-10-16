@@ -28,6 +28,7 @@ $$
 [如何求解回归系数呢?]()
 参数估计常用方法：[梯度上升和梯度下降](参数估计—梯度上升和梯度下降.md)、[最小二乘法](参数估计—最小二乘法.md)、[极大似然估计](参数估计—极大似然估计.md)
 
+
 ## [算法实现]()
 ### 项目案例1: 使用 Logistic 回归在简单数据集上的分类
 在一个简单的数据集上，采用梯度上升法找到 Logistic 回归分类器在此数据集上的最佳回归系数
@@ -56,12 +57,57 @@ $$
 
 ```python
 # 解析数据
-def loadDataSet(file_name):
+def loadDataSet(file):
+    data_arr = []
+    data_label_arr = []
+    f = open(file, 'r')
+    for line in f.readlines():
+        line_arr = line.strip().split()
+        data_arr.append([1.0, float(line_arr[0]), float(line_arr[1])])
+        data_label_arr.append(int(line_arr[2]))
+    return data_arr, data_label_arr
 ```
 > 分析数据: 采用任意方法对数据进行分析，此处不需要
 
 > 训练算法: 使用梯度上升找到最佳参数
+```python
+# 梯度下降算法：
+def grad_descent(data_array, data_label_array):
+    alpha = 0.001
+    max_cycle = 100
 
+    data_mat = np.mat(data_array)
+    label_mat = np.mat(data_label_array).transpose()
+    m, n = np.shape(data_mat)
+
+    wights = np.ones((n, 1))
+    for i in range(max_cycle):
+        y = sigmoid(data_mat * wights)
+        error = y - label_mat
+        # 此处计算梯度，涉及矩阵求导
+        wights = wights - alpha * data_mat.transpose() * error
+    return wights.getA()
+
+# 梯度上升算法：
+def grad_descent(data_array, data_label_array):
+    alpha = 0.001
+    max_cycle = 100
+
+    data_mat = np.mat(data_array)
+    label_mat = np.mat(data_label_array).transpose()
+    m, n = np.shape(data_mat)
+
+    wights = np.ones((n, 1))
+    for i in range(max_cycle):
+        y = sigmoid(data_mat * wights)
+        error = label_mat - y 
+        # 此处计算梯度，涉及矩阵求导
+        wights = wights + alpha * data_mat.transpose() * error
+    return wights.getA()
+```
+![!\[\](../image/LR13.png)](../image/LR13.png)
+采用最佳参数分类后结果（部分结果存在错误分类）
+![!\[\](../image/LR_12.png)](../image/LR_12.png)
 
 ### 项目案例2: 从疝气病症预测病马的死亡率
 #### 项目概述
@@ -106,7 +152,7 @@ def loadDataSet(file_name):
 现在，我们对下一节要用的数据集进行预处理，使其可以顺利地使用分类算法。在预处理需要做两件事: 
 * 所有的缺失值必须用一个实数值来替换，因为我们使用的 NumPy 数据类型不允许包含缺失值。我们这里选择实数 0 来替换所有缺失值，恰好能适用于 Logistic 回归。这样做的直觉在于，我们需要的是一个在更新时不会影响系数的值。回归系数的更新公式如下:
 
-    weights = weights + alpha * error * dataMatrix[dataIndex[randIndex]]
+    梯度下降算法：weights = weights - alpha * error * dataMatrix[dataIndex[randIndex]]
 
     如果 dataMatrix 的某个特征对应值为 0，那么该特征的系数将不做更新，即:
 
