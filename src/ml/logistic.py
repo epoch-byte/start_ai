@@ -34,11 +34,11 @@ def sigmoid(x):
 
 
 """
-梯度下降算法
+批量梯度下降算法（batch BSD）
 """
 
 
-def grad_descent(data_array, data_label_array):
+def batchGradDes(data_array, data_label_array):
     alpha = 0.002
     max_cycle = 300
 
@@ -57,30 +57,74 @@ def grad_descent(data_array, data_label_array):
 
 
 """
-随机梯度下降(SGD)
+量随机梯度下降（BGD）
 """
 
 
 def gradRandomDes(data_array, data_label_array):
-    max_cycle = 400
+    max_cycle = 200
     data_mat = np.mat(data_array)
     #  label_mat = np.mat(data_label_array).transpose()
     m, n = np.shape(data_mat)
     wights = np.ones((n, 1))
     errors = []
+    alpha = 0.0001
     for j in range(max_cycle):
-        data_index = list(range(m))
-        for i in range(m):
-            alpha = 4 / (1.0 + j + i) + 0.01
-            index = int(np.random.uniform(0, len(data_index)))
-            y = sigmoid(np.sum(data_mat[data_index[index]] * wights))
-            # 损失函数
-            error = y - data_label_array[data_index[index]]
-            # 此处计算梯度，涉及矩阵求导
-            wights = wights - alpha * data_mat[data_index[index]].transpose() * error
-            del (data_index[index])
-            errors.append(error)
+        index = int(np.random.uniform(0, len(data_mat)))
+        y = sigmoid(data_mat[index] * wights)
+        # 损失函数
+        error = y - data_label_array[index]
+        # 此处计算梯度，涉及矩阵求导
+        wights = wights - alpha * data_mat[index].transpose() * error
+        errors.append(error)
+
+    x_label = list(range(0, max_cycle))
+    plt.plot(x_label, errors)
+    plt.show()
     return wights
+
+
+"""
+小批量随机梯度下降（Mini-batch SGD）
+"""
+
+
+def gradSmallBatchRandomDes(data_array, data_label_array):
+    batchSize = 50
+    max_cycle = 1000
+    alpha = 0.000859
+
+    data_mat = np.mat(data_array)
+    m, n = np.shape(data_mat)
+    weights = np.ones((n, 1))
+    errors = []
+    for j in range(max_cycle):
+        batch_data_array, batch_data_label_array = createBatch(data_array, data_label_array, batchSize)
+
+        batch_data_mat = np.mat(batch_data_array)
+        batch_label_mat = np.mat(batch_data_label_array).transpose()
+
+        y = sigmoid(batch_data_mat * weights)
+        # 损失函数
+        error = y - batch_label_mat
+        # 此处计算梯度，涉及矩阵求导
+        weights = weights - alpha * batch_data_mat.transpose() * error
+        errors.append(np.mean(error))
+
+    x_label = list(range(0, max_cycle))
+    plt.plot(x_label, errors)
+    plt.show()
+    return weights
+
+
+def createBatch(data_array, data_label_array, batch_size):
+    random_numbers = [np.random.randint(0, len(data_label_array)) for _ in range(batch_size)]
+    batch_data_array = []
+    batch_data_label_array = []
+    for i in random_numbers:
+        batch_data_array.append(data_array[i])
+        batch_data_label_array.append(data_label_array[i])
+    return batch_data_array, batch_data_label_array
 
 
 """
@@ -177,7 +221,7 @@ def simpleTest():
     data_arr, data_label = loadDataSet("D:\\pySpace\\github\\start_ai\\data\\ml\\Logistic\\TestSet.txt")
     viewData(data_arr, data_label)
     print("OK")
-    weights = grad_descent(data_arr, data_label)
+    weights = batchGradDes(data_arr, data_label)
     print(weights.getA())
     plot_best_fit(weights)
     print("OK")
@@ -185,8 +229,9 @@ def simpleTest():
 
 def colicTrain():
     data_arr, label_arr = loadDataSet("D:\\pySpace\\github\\start_ai\\data\\ml\\Logistic\\HorseColicTraining.txt")
-    weights = gradRandomDes(data_arr, label_arr).getA()
-    print(weights)
+    # weights = gradRandomDes(data_arr, label_arr).getA()
+    # weights = gradSmallBatchRandomDes(data_arr,label_arr).getA()
+    weights = gradSmallBatchRandomDes(data_arr, label_arr).getA()
     return weights
 
 
@@ -212,8 +257,7 @@ def scikitLearnLR():
     X_train, y_train = loadDataSet("D:\\pySpace\\github\\start_ai\\data\\ml\\Logistic\\HorseColicTraining.txt")
     lr.fit(X_train, y_train)
 
-    X_test, y_test = loadDataSet(
-        "D:\\pySpace\\github\\start_ai\\data\\ml\\Logistic\\HorseColicTraining_100k_last_column_binary.txt")
+    X_test, y_test = loadDataSet("D:\\pySpace\\github\\start_ai\\data\\ml\\Logistic\\HorseColicTest.txt")
     print('Accuracy of LR Classifier:%f' % lr.score(X_test, y_test))
     #   print(classification_report(y_test, lr_y_predit, target_names=['high', 'low']))
     m, n = np.shape(X_test)
@@ -226,30 +270,7 @@ def scikitLearnLR():
     print(error / m)
 
 
-def generate_random_data_with_binary_last_column(num_records):
-    random_data = []
-    for _ in range(num_records):
-        # First 21 columns: random floats between 0 and 100
-        row = [f"{np.random.uniform(0, 100):.6f}" for _ in range(21)]
-        # Last column: either 0 or 1
-        row.append(f"{np.random.choice([0, 1])}")
-        random_data.append("\t".join(row))
-    return random_data
-
-
-def createData():
-    # Generate 100,000 records with the last column as 0 or 1
-    random_data_binary_last_column = generate_random_data_with_binary_last_column(10000)
-
-    # Save the modified data to a new text file
-    random_file_binary_last_column_path = 'D:\pySpace\github\start_ai\data\ml\Logistic\HorseColicTraining_100k_last_column_binary.txt'
-    with open(random_file_binary_last_column_path, 'w') as output_file:
-        output_file.write("\n".join(random_data_binary_last_column))
-
-
 if __name__ == "__main__":
-    # createData()
     # simpleTest();
     colicPredict()
-
     scikitLearnLR()
