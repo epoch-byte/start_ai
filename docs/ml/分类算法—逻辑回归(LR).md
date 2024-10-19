@@ -35,7 +35,32 @@ $$
 ### [代价函数]()
 我们使用极大似然估计法来求解。极大似然估计法利用已知样本结果，反推最有可能导致这样结果的原因。我们的目标就是找到一组参数，使得在这组参数下，我们的样本的似然度（概率）最大。
 对于一个二分类模型，已知P(y=1)=σ(z),P(y=0)=1−σ(z) 则似然函数为：
-                  $l=\prod_{i=1}^{n}P(y=1)*(1-P(y=1))$
+                  $$L(w)=\prod_{i=1}^{n}(P(y=1|x^{(i)};w)^{y^{(i)}}*(1-P(y=0|x^{(i)};w))^{1-y^{(i)}})$$
+两边同时取对数处理
+         $$l(w) = log(L(w)) = \sum_{i=1}^{n}(y^{(i)}*log(P(y=1|x^{(i)};w))+(1-y^{(i)})*log(1-P(y=1|x^{(i)};w)))$$
+则代价函数为：
+         $$
+           \begin{align}
+                J(w) &= -\frac{1}{n}*l(w) \\
+                     &= -\frac{1}{n}\sum_{i=1}^{n}(y^{(i)}*log(P(y=1|x^{(i)};w))+(1-y^{(i)})*log(1-P(y=0|x^{(i)};w))) \\
+                     &= -\frac{1}{n}\sum_{i=1}^{n}(y^{(i)}*log(\frac{1}{1+e^{-w^{T}x^{(i)}}}) + (1-y^{(i)})*log(1-\frac{1}{1+e^{-w^{T}x^{(i)}}})) \\
+                     &= -\frac{1}{n}\sum_{i=1}^{n}(y^{(i)}*log(\frac{1}{1+e^{-w^{T}x^{(i)}}}) + (1-y^{(i)})*log(\frac{e^{-w^{T}x^{(i)}}}{1+e^{-w^{T}x^{(i)}}})) \\
+                     &= -\frac{1}{n}\sum_{i=1}^{n}(- y^{(i)}*log(1+e^{-w^{T}x^{(i)}}) + (1-y^{(i)})*log(\frac{1-e^{w^{T}x^{(i)}}}{e^{-w^{T}x^{(i)}}})^{-1}) \\
+                     &= -\frac{1}{n}\sum_{i=1}^{n}(- y^{(i)}*log(1+e^{-w^{T}x^{(i)}}) - (1-y^{(i)})*log(1+e^{w^{T}x^{(i)}})) 
+           \end{align}
+        $$
+对J(w)求偏导：
+        $$
+           \begin{align}
+            \frac{\partial J(w)}{\partial w_{j}} &= \frac{\partial (-\frac{1}{n}\sum_{i=1}^{n}(- y^{(i)}*log(1+e^{-w^{T}x^{(i)}}) - (1-y^{(i)})*log(1+e^{w^{T}x^{(i)}})))}{\partial w_{j}} \\
+                                        &= -\frac{1}{n} \sum_{i=1}^{n}{-y^{(i)}\frac{-x^{(i)e^{-w^{T}x^{(i)}}}}{1+e^{-w^{T}x^{(i)}}} - (1-y^{(i)})\frac{x^{(i)e^{w^{T}x^{(i)}}}}{1+e^{w^{T}x^{(i)}}}} \\
+                                        &= -\frac{1}{n}\sum_{i=1}^{n}(y^{(i)}-σ(x^{(i)}))x_{j}^{(i)}
+           \end{align}
+        $$
+所以：
+$$   
+        w_{j} := w_{j} - \alpha*\frac{1}{n}\sum_{i=1}^{n}(σ(x^{(i)})-y^{(i)})x_{j}^{(i)}
+$$
 ## [算法实现]()
 ### 项目案例1: 使用 Logistic 回归在简单数据集上的分类
 在一个简单的数据集上，采用梯度上升法找到 Logistic 回归分类器在此数据集上的最佳回归系数
@@ -92,7 +117,7 @@ def grad_descent(data_array, data_label_array):
         y = sigmoid(data_mat * wights)
         error = y - label_mat
         # 此处计算梯度，涉及矩阵求导
-        wights = wights - alpha * data_mat.transpose() * error
+        wights = wights - alpha * data_mat.transpose() * error  // 此处计算梯度错误，非线性回归梯度计算
     return wights.getA()
 
 # 梯度上升算法：
@@ -109,7 +134,7 @@ def grad_descent(data_array, data_label_array):
         y = sigmoid(data_mat * wights)
         error = label_mat - y 
         # 此处计算梯度，涉及矩阵求导
-        wights = wights + alpha * data_mat.transpose() * error
+        wights = wights + alpha * data_mat.transpose() * error  // 此处计算梯度错误，非线性回归梯度计算
     return wights.getA()
 ```
 ![!\[\](../image/LR13.png)](../image/LR13.png)
