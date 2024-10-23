@@ -18,7 +18,7 @@ Sigmoid 函数:
 $$
 \sigma(z)=\frac{1}{1+e^{-z}}
 $$
-![!\[\](../image/lr1.png)](../image/lr1.png)
+![!\[\](../image/LR10.png)](../image/LR10.png)
 为了实现 Logistic 回归分类器，我们可以在每个特征上都乘以一个回归系数（如下公式所示），然后把所有结果值相加，将这个总和代入 Sigmoid 函数中，进而得到一个范围在 0~1 之间的数值。任何大于 0.5 的数据被分入 1 类，小于 0.5 即被归入 0 类。所以，Logistic 回归也是一种概率估计，比如这里Sigmoid 函数得出的值为0.5，可以理解为给定数据和参数，数据被分入 1 类的概率为0.5。
 
 ![Alt text](image.png)
@@ -84,7 +84,7 @@ $$
 ```
 
 绘制在图中，如下图所示: 
-![!\[\](../image/LR_11.png)](../image/LR_11.png)
+![!\[\](../image/LR11.png)](../image/LR11.png)
 > 准备数据: 由于需要进行距离计算，因此要求数据类型为数值型。另外，结构化数据格式则最佳
 
 ```python
@@ -117,7 +117,7 @@ def grad_descent(data_array, data_label_array):
         y = sigmoid(data_mat * wights)
         error = y - label_mat
         # 此处计算梯度，涉及矩阵求导
-        wights = wights - alpha * data_mat.transpose() * error  // 此处计算梯度错误，非线性回归梯度计算
+        wights = wights - alpha * data_mat.transpose() * error
     return wights.getA()
 
 # 梯度上升算法：
@@ -134,12 +134,12 @@ def grad_descent(data_array, data_label_array):
         y = sigmoid(data_mat * wights)
         error = label_mat - y 
         # 此处计算梯度，涉及矩阵求导
-        wights = wights + alpha * data_mat.transpose() * error  // 此处计算梯度错误，非线性回归梯度计算
+        wights = wights + alpha * data_mat.transpose() * error
     return wights.getA()
 ```
 ![!\[\](../image/LR13.png)](../image/LR13.png)
 采用最佳参数分类后结果（部分结果存在错误分类）
-![!\[\](../image/LR_12.png)](../image/LR_12.png)
+![!\[\](../image/LR12.png)](../image/LR12.png)
 
 ### 项目案例2: 从疝气病症预测病马的死亡率
 #### 项目概述
